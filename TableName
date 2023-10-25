@@ -1,0 +1,32 @@
+CREATE TABLE mst_unsei( --運勢マスタテーブル
+	unsei_code varchar(4),  --運勢コード　　　　　
+	unsei_name varchar(7) not null, --運勢名
+	changer varchar(20) not null, --更新者
+	update_date date not null, --更新日
+	author varchar(20) not null, --作成者
+	created_date date not null, --作成日
+	PRIMARY KEY(unsei_code)
+);
+
+CREATE TABLE Omikuji( --おみくじテーブル　　
+	omikuji_code varchar(55), --おみくじコード
+	unsei_code varchar(4) REFERENCES mst_unsei(unsei_code), --運勢コード
+	negaigoto varchar(50) not null, --願い事
+	akinai varchar(50) not null, --商い
+	gakumon varchar(50) not null, --学問
+	changer varchar(20) not null, --更新者
+	update_date date not null, --更新日
+	author varchar(20) not null, --作成者
+	creared_date date not null, --作成日
+	PRIMARY KEY(omikuji_code)
+);
+CREATE TABLE result( --結果テーブル
+	fortune_date date not null, --占い日付
+	birthday date not null, --誕生日
+	omikuji_code varchar(55) not null REFERENCES omikuji(omikuji_code), --おみくじコード
+	changer varchar(50) not null, --更新者
+	update_date date not null, --更新日
+	author varchar(20) not null, --作成者
+	created_date date not null, --作成日
+	PRIMARY KEY(omikuji_code)
+);
