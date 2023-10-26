@@ -41,7 +41,7 @@ public class Training3 {
 		//おみくじオブジェクトの宣言
 		Omikuji omikuji = null;
 
-		//DBに接続するために宣言（箱の準備）
+		//DBに接続するために宣言
 		Connection connection = null;
 
 		//PreparedStatemenrの準備
@@ -54,7 +54,7 @@ public class Training3 {
 			//csvファイルの読み込み
 			List<String> line = Files.readAllLines(path);
 
-			//箱の準備（おみくじテーブルに内容を入れる）
+			//箱を使えるように、目の前に準備
 			//DBに接続
 			connection = DBManager.getConnection();
 
@@ -63,164 +63,145 @@ public class Training3 {
 				//dataの,を取り除く
 				String[] data = line.get(i).split(",");
 
-				//SQL文を準備(OmikujiテーブルをINSERTする)
-				String sqlInsertOmikuji = "INSERT INTO Omikuji VALUES (?, ?, ?, ?, ?, 'kumakiri', CURRENT_DATE, 'kumakiri', CURRENT_DATE)";
+				//data[0]に値が入っていない時に実行する
+				if(data[0] == null) {
 
-				//ステートメントの作成（オブジェクト生成）
-				preparedStatement = connection.prepareStatement(sqlInsertOmikuji);
+					//SQL文を準備(OmikujiテーブルをINSERTする)
+					String sqlInsertOmikuji = "INSERT INTO Omikuji VALUES (?, ?, ?, ?, ?, 'kumakiri', CURRENT_DATE, 'kumakiri', CURRENT_DATE)";
 
-				//SQL中の各プレースホルダーに入力値をバインド
-				preparedStatement.setString(1, data[0]);
-				//各具象クラスの戻り値をバインド
-				preparedStatement.setString(2, convertUnsei(data[1]));
-				preparedStatement.setString(3, data[2]);
-				preparedStatement.setString(4, data[3]);
-				preparedStatement.setString(5, data[4]);
+					//ステートメントの作成（オブジェクト生成）
+					preparedStatement = connection.prepareStatement(sqlInsertOmikuji);
 
-				//SQL文を実行(登録の際はUpdate)
-				preparedStatement.executeUpdate();
+					//SQL中の各プレースホルダーに入力値をバインド
+					preparedStatement.setString(1, data[0]);
+					//各具象クラスの戻り値をバインド
+					preparedStatement.setString(2, convertUnsei(data[1]));
+					preparedStatement.setString(3, data[2]);
+					preparedStatement.setString(4, data[3]);
+					preparedStatement.setString(5, data[4]);
+
+					//SQL文を実行(登録の際はUpdate)
+					preparedStatement.executeUpdate();
+				}
 			}
+			//入力された値が正しくない間実行するための条件
+			while (true) {
 
-			//System.inからInputStreamReaderクラスのオブジェクト作成
-			//BufferedReaderクラスのオブジェクト作成
-			reader = new BufferedReader(new InputStreamReader(System.in));
+				//System.inからInputStreamReaderクラスのオブジェクト作成
+				//BufferedReaderクラスのオブジェクト作成
+				reader = new BufferedReader(new InputStreamReader(System.in));
 
-			//誕生日の入力
-			System.out.println("誕生日を入力してください(例:20150809)");
+				//誕生日の入力
+				System.out.println("誕生日を入力してください(例:20150809)");
 
-			//日付入力のフォーマット（yyyyMMdd）の生成
-			simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+				//日付入力のフォーマット（yyyyMMdd）の生成
+				simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
 
-			//入力された値が正しい（存在している）かチェック
-			simpleDateFormat.setLenient(false);
+				//入力された値が正しい（存在している）かチェック
+				simpleDateFormat.setLenient(false);
 
-			try {
-				//readLine()メソッドを使って入力した1行データを読み込む
-				String inputStr = reader.readLine();
+				try {
+					//readLine()メソッドを使って入力した1行データを読み込む
+					String inputStr = reader.readLine();
 
-				//入力したデータをDate型に変換
-				Date inputDate = simpleDateFormat.parse(inputStr);
+					//入力したデータをDate型に変換
+					Date inputDate = simpleDateFormat.parse(inputStr);
 
-				//Date型（現在）の生成
-				Date date = new Date();
+					//Date型（現在）の生成
+					Date date = new Date();
 
-				//Date型(現在)をString型に変換
-				String now = new SimpleDateFormat("yyyyMMdd").format(date);
+					//Date型(現在)をString型に変換
+					String now = new SimpleDateFormat("yyyyMMdd").format(date);
 
-				//ランダムオブジェクトを生成する（本日と入力した値のString型をInteger型に変換）
-				Random rand = new Random(Integer.parseInt(now) + Integer.parseInt(inputStr));
+					//ランダムオブジェクトを生成する（本日と入力した値のString型をInteger型に変換）
+					Random rand = new Random(Integer.parseInt(now) + Integer.parseInt(inputStr));
 
-				//おみくじをランダムにするための準備(おみくじコードの最大値を上限とする)
-				//おみくじコードを取得するためのSQL文(138行目で値をバインド)
-				String result = "SELECT * FROM Omikuji WHERE omikuji_code = ? ";
+					//おみくじをランダムにするための準備(おみくじコードの最大値を上限とする)
+					//おみくじコードを取得するためのSQL文(138行目で値をバインド)
+					String result = "SELECT * FROM Omikuji WHERE omikuji_code = ? ";
 
-				//ステートメント作成（オブジェクト生成）
-				PreparedStatement preparedStatement2 = connection.prepareStatement(result);
+					//ステートメント作成（オブジェクト生成）
+					PreparedStatement preparedStatement2 = connection.prepareStatement(result);
 
-				//ステートメント（SQL文を受け取って実行）
-				Statement statement = connection.createStatement();
+					//ステートメント（SQL文を受け取って実行）
+					Statement statement = connection.createStatement();
 
-				//おみくじコードの最大値を出すためのSQL文(ランダムに使用)
-				//文字列型のomikuji_codeをInteger型にキャスト
-				String maxCode = "SELECT MAX(CAST (omikuji_code AS Integer)) as Omikuji_code FROM Omikuji";
+					//おみくじコードの最大件数を出すためのSQL文(ランダムに使用)
+					//文字列型のomikuji_codeをInteger型にキャスト
+					String maxCode = "SELECT COUNT(CAST (omikuji_code AS Integer)) as Omikuji_code FROM Omikuji";
 
-				//SQL文を実行して、その結果をresultSetに代入
-				resultSet = statement.executeQuery(maxCode);
+					//SQL文を実行して、その結果をresultSetに代入
+					resultSet = statement.executeQuery(maxCode);
 
-				//おみくじコードの最大値を取得するための宣言
-				String maxOmikujiCode = "";
+					//おみくじコードの最大件数を取得するための宣言
+					String maxOmikujiCode = "";
 
-				if (resultSet.next()) {
-					//1件取得(最大値)
-					maxOmikujiCode = resultSet.getString("omikuji_code");
-				}
-				//おみくじコードの最大値(50)を出す(String型をint型に変換)
-				int max = Integer.parseInt(maxOmikujiCode);
-
-				//ランダムにしたおみくじの値をバインド(116行目のSQL文)
-				//omikuji_codeの?の部分に、同じ日に同じ運勢が返ってくる + 50個(omikuji_codeの最大値)分ランダムにしている
-				//rand.nextIntをString型に変換
-				preparedStatement2.setString(1, String.valueOf(rand.nextInt(max)));
-
-				//SQLを実行(preparedStatement2のオブジェクトが代入される)
-				ResultSet resultSet2 = preparedStatement2.executeQuery();
-
-				String omikujiCode = "";
-
-				//next：次があるか、カーソル の役割
-				if (resultSet2.next()) {
-					//おみくじの情報を取得
-					omikujiCode = resultSet2.getString("omikuji_code");
-					String unseiCode = resultSet2.getString("unsei_code");
-					String negaigoto = resultSet2.getString("negaigoto");
-					String akinai = resultSet2.getString("akinai");
-					String gakumon = resultSet2.getString("gakumon");
-
-					//取得したおみくじ情報を元にオブジェクト生成
-					switch (unseiCode) {
-					case "01":
-						omikuji = new GreatBlessing();
-						break;
-
-					case "02":
-						omikuji = new MiddleBlassing();
-						break;
-
-					case "03":
-						omikuji = new SmallBlessing();
-						break;
-
-					case "04":
-						omikuji = new UncertinLuck();
-						break;
-
-					case "05":
-						omikuji = new GreatBlessing();
-						break;
-
-					case "06":
-						omikuji = new BadLuck();
-						break;
-
-					default:
-						System.out.println("飛ばします");
-						break;
+					if (resultSet.next()) {
+						//1件取得(最大件数)
+						maxOmikujiCode = resultSet.getString("omikuji_code");
 					}
-					//値をsetする
-					omikuji.setUnsei();
-					omikuji.setNegaigoto(negaigoto);
-					omikuji.setAkinai(akinai);
-					omikuji.setGakumon(gakumon);
+					//おみくじコードの最大件数(50)を出す(String型をint型に変換)
+					int max = Integer.parseInt(maxOmikujiCode);
+
+					//ランダムにしたおみくじの値をバインド(116行目のSQL文)
+					//omikuji_codeの?の部分に、同じ日に同じ運勢が返ってくる + 50個(omikuji_codeの最大件数)分ランダムにしている
+					//rand.nextIntをString型に変換
+					preparedStatement2.setString(1, String.valueOf(rand.nextInt(max)));
+
+					//SQLを実行(preparedStatement2のオブジェクトが代入される)
+					ResultSet resultSet2 = preparedStatement2.executeQuery();
+
+					String omikujiCode = "";
+
+					//next：次があるか、カーソル の役割
+					if (resultSet2.next()) {
+						//おみくじの情報を取得
+						omikujiCode = resultSet2.getString("omikuji_code");
+						String unseiCode = resultSet2.getString("unsei_code");
+						String negaigoto = resultSet2.getString("negaigoto");
+						String akinai = resultSet2.getString("akinai");
+						String gakumon = resultSet2.getString("gakumon");
+
+						//オブジェクト生成
+						omikuji = getOmikuji(unseiCode);
+
+						//値をsetする
+						omikuji.setUnsei();
+						omikuji.setNegaigoto(negaigoto);
+						omikuji.setAkinai(akinai);
+						omikuji.setGakumon(gakumon);
+					}
+					//おみくじの内容をコンソールに表示
+					System.out.println(omikuji.disp());
+
+					//結果テーブルにおみくじの内容を登録(resultテーブルにINSERTする)
+					String sqlInsertResult = "INSERT INTO result VALUES(?, ?, ?, 'kumakiri', CURRENT_DATE, 'kumakiri', CURRENT_DATE)";
+
+					//ステートメントの作成
+					PreparedStatement preparedStatement3 = connection.prepareStatement(sqlInsertResult);
+
+					//占った日をjava.util.Dateから、java.sql.Dateへ変換
+					java.sql.Date dateConvertDate = new java.sql.Date(date.getTime());
+
+					//誕生日をjava.util.Dateから、java.sql.Dateへ変換
+					java.sql.Date dateConvertInputDate = new java.sql.Date(inputDate.getTime());
+
+					//SQL中の各プレースホルダーに入力値をバインド
+					preparedStatement3.setDate(1, dateConvertDate); //占った日
+					preparedStatement3.setDate(2, dateConvertInputDate); //誕生日
+					preparedStatement3.setString(3, omikujiCode);//おみくじコードの取得
+
+					
+					//SQL文を実行(登録の際はUpdate)
+					preparedStatement3.executeUpdate();
+
+					//正しい値が入力されたら抜ける
+					break;
+
+				} catch (ParseException | NumberFormatException pn) {
+					//入力した日付が存在しないか、フォーマットが違う場合
+					System.out.println("存在しない日付です");
 				}
-				//おみくじの内容をコンソールに表示
-				System.out.println(omikuji.disp());
-
-				//結果テーブルにおみくじの内容を登録(resultテーブルにINSERTする)
-				String sqlInsertResult = "INSERT INTO result VALUES(?, ?, ?, 'kumakiri', CURRENT_DATE, 'kumakiri', CURRENT_DATE)";
-
-				//ステートメントの作成
-				PreparedStatement preparedStatement3 = connection.prepareStatement(sqlInsertResult);
-
-				//占った日をjava.util.Dateから、java.sql.Dateへ変換
-				long timeInMilliSecondsdate = date.getTime();
-				java.sql.Date dateConvertDate = new java.sql.Date(timeInMilliSecondsdate);
-
-				//誕生日をjava.util.Dateから、java.sql.Dateへ変換
-				long timeInMilliSecondsInputDate = inputDate.getTime();
-				java.sql.Date dateConvertInputDate = new java.sql.Date(timeInMilliSecondsInputDate);
-
-				//SQL中の各プレースホルダーに入力値をバインド
-				preparedStatement3.setDate(1, dateConvertDate); //占った日
-				preparedStatement3.setDate(2, dateConvertInputDate); //誕生日
-				preparedStatement3.setString(3, omikujiCode);//おみくじコードの取得
-
-				//SQL文を実行(登録の際はUpdate)
-				preparedStatement3.executeUpdate();
-
-			} catch (ParseException | NumberFormatException pn) {
-				//入力した日付が存在しないか、フォーマットが違う場合
-				System.out.println("存在しない日付です");
-				pn.printStackTrace();
 			}
 
 		} catch (IOException e) {
@@ -261,18 +242,62 @@ public class Training3 {
 		case "大吉":
 			//大吉だったら01を返す
 			return "01";
+
 		case "中吉":
 			return "02";
+
 		case "小吉":
 			return "03";
+
 		case "末吉":
 			return "04";
+
 		case "吉":
 			return "05";
+
 		case "凶":
 			return "06";
+
 		default:
-			//01から06意外だったら例外を投げる
+			//01から06以外だったら例外を投げる
+			throw new IllegalArgumentException("予想外の値です");
+		}
+	}
+
+	/**
+	 * 運勢コードを元にオブジェクト生成をするクラスです
+	 * 
+	 * @param unseiCode 運勢コード
+	 * @return おみくじクラス
+	 */
+	private static Omikuji getOmikuji(String unseiCode) {
+
+		//おみくじクラスの宣言
+		Omikuji omikuji = null;
+
+		//取得したおみくじ情報を元にオブジェクト生成
+		switch (unseiCode) {
+		case "01":
+			//01だったら大吉オブジェクトを生成
+			return new GreatBlessing();
+
+		case "02":
+			return new MiddleBlassing();
+
+		case "03":
+			return new SmallBlessing();
+
+		case "04":
+			return new UncertinLuck();
+
+		case "05":
+			return new GreatBlessing();
+
+		case "06":
+			return new BadLuck();
+
+		default:
+			//01から06以外だったら例外を投げる
 			throw new IllegalArgumentException("予想外の値です");
 		}
 	}
