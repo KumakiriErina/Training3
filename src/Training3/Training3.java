@@ -44,9 +44,9 @@ public class Training3 {
 		//現在の日付を準備
 		Date date = null;
 
-		//readLine()メソッドを使って入力した1行データを読み込む準備
+		//readLine()メソッドを使って入力した1行データを読み込むための準備
 		String inputStr = null;
-		
+
 		//入力したデータをDate型に変換する準備
 		Date inputDate = null;
 
@@ -69,17 +69,38 @@ public class Training3 {
 			//箱を使えるように、目の前に準備
 			//DBに接続
 			connection = DBManager.getConnection();
+			
+			//最大件数を出したいSQL(INSERTの条件に使用)
+			String countMax = "SELECT COUNT(CAST (omikuji_code AS Integer)) as Omikuji_code FROM Omikuji;";
 
-			//50回分する
-			for (int i = 0; i < line.size(); i++) {
-				//dataの,を取り除く
-				String[] data = line.get(i).split(",");
+			//ステートメント（SQL文を受け取って実行）
+			Statement statement1 = connection.createStatement();
+			
+			//SQL文を実行して、その結果をresultSetに代入
+			resultSet = statement1.executeQuery(countMax);
 
-				//data[0]に値が入っていない時に実行する
-				if(data[0] == null) {
+			//おみくじコードの最大件数を取得するための宣言
+			String countOmikujiCode = "";
+
+			if (resultSet.next()) {
+				//1件取得(最大件数)
+				countOmikujiCode = resultSet.getString("omikuji_code");
+			}
+
+			//おみくじコードの最大件数(50)を出す(String型をint型に変換)
+			int count = Integer.parseInt(countOmikujiCode);
+
+			//最大件数が50未満だったら登録処理にすすむ
+			if(count < 50) {
+
+				//50回分する
+				for (int i = 0; i < line.size(); i++) {
+
+					//dataの,を取り除く
+					String[] data = line.get(i).split(",");
 
 					//SQL文を準備(OmikujiテーブルをINSERTする)
-					String sqlInsertOmikuji = "INSERT INTO Omikuji VALUES (?, ?, ?, ?, ?, 'kumakiri', CURRENT_DATE, 'kumakiri', CURRENT_DATE)";
+					String sqlInsertOmikuji = "INSERT INTO Omikuji VALUES(?, ?, ?, ?, ?, 'kumakiri', CURRENT_DATE, 'kumakiri', CURRENT_DATE);";
 
 					//ステートメントの作成（オブジェクト生成）
 					preparedStatement = connection.prepareStatement(sqlInsertOmikuji);
@@ -94,9 +115,12 @@ public class Training3 {
 
 					//SQL文を実行(登録の際はUpdate)
 					preparedStatement.executeUpdate();
+					
+					//close処理
+					preparedStatement.close();
 				}
 			}
-				
+
 			//入力された値が正しくない間実行するための条件
 			while (true) {
 				try {
@@ -119,7 +143,6 @@ public class Training3 {
 					//入力したデータをDate型に変換
 					inputDate = simpleDateFormat.parse(inputStr);
 	
-					
 				} catch (ParseException | NumberFormatException pn) {
 					//入力した日付が存在しないか、フォーマットが違う場合
 					System.out.println("存在しない日付です");
@@ -128,7 +151,6 @@ public class Training3 {
 				//正しい値が入力されたら抜ける
 				break;
 			}
-			
 
 			//Date型（現在）の生成
 			date = new Date();
@@ -146,49 +168,34 @@ public class Training3 {
 			//ステートメント作成（オブジェクト生成）
 			PreparedStatement preparedStatement2 = connection.prepareStatement(result);
 
-			//ステートメント（SQL文を受け取って実行）
-			Statement statement = connection.createStatement();
-
 			//おみくじコードの最大値を出すためのSQL文(ランダムに使用)
 			//文字列型のomikuji_codeをInteger型にキャスト
 			String maxCode = "SELECT MAX(CAST (omikuji_code AS Integer)) as Omikuji_code FROM Omikuji";
 
+			//ステートメント（SQL文を受け取って実行）
+			Statement statement2 = connection.createStatement();
+
 			//SQL文を実行して、その結果をresultSetに代入
-			resultSet = statement.executeQuery(maxCode);
+			ResultSet resultSet2 = statement2.executeQuery(maxCode);
 
 			//おみくじコードの最大値を取得するための宣言
 			String maxOmikujiCode = "";
 
-			if (resultSet.next()) {
+			if (resultSet2.next()) {
 				//1件取得(最大値)
-				maxOmikujiCode = resultSet.getString("omikuji_code");
+				maxOmikujiCode = resultSet2.getString("omikuji_code");
 			}
 
 			//おみくじコードの最大値(50)を出す(String型をint型に変換)
 			int max = Integer.parseInt(maxOmikujiCode);
 
-			//おみくじコードの最小値を出すためのSQL文（ランダムに使用）
-			//文字列型のomikuji_codeをInteger型にキャスト
-			String minCode = "SELECT MIN(CAST (omikuji_code AS Integer)) as Omikuji_code FROM Omikuji";
-			
-			//SQL文を実行して、その結果をresultSetに代入
-			ResultSet resultSet2 = statement.executeQuery(minCode);
-			
-			//おみくじコードの最大値を取得するための宣言
-			String minOmikujiCode = "";
-
-			if (resultSet2.next()) {
-				//1件取得(最大値)
-				minOmikujiCode = resultSet2.getString("omikuji_code");
-			}
-
-			//おみくじコードの最大値(50)を出す(String型をint型に変換)
-			int min = Integer.parseInt(minOmikujiCode);
+			/** ランダムの最小値を定義しています*/
+			final int MIN = 1;
 
 			//ランダムにしたおみくじの値をバインド(116行目のSQL文)
 			//omikuji_codeの?の部分に、同じ日に同じ運勢が返ってくる + 50個(omikuji_codeの最大値)分ランダムにしている
 			//rand.nextIntをString型に変換
-			preparedStatement2.setString(1, String.valueOf(rand.nextInt(min, max + min)));
+			preparedStatement2.setString(1, String.valueOf(rand.nextInt(MIN, max + MIN)));
 
 			//SQLを実行(preparedStatement2のオブジェクトが代入される)
 			ResultSet resultSet3 = preparedStatement2.executeQuery();
@@ -303,9 +310,6 @@ public class Training3 {
 	 * @return おみくじクラス
 	 */
 	private static Omikuji getOmikuji(String unseiCode) {
-
-		//おみくじクラスの宣言
-		Omikuji omikuji = null;
 
 		//取得したおみくじ情報を元にオブジェクト生成
 		switch (unseiCode) {
