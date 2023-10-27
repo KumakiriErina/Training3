@@ -52,6 +52,9 @@ public class Training3 {
 
 		//おみくじオブジェクトの宣言
 		Omikuji omikuji = null;
+		
+		//おみくじコードの最大件数を取得するための宣言
+		int countOmikujiCode = 0;
 
 		//DBに接続するために宣言
 		Connection connection = null;
@@ -71,27 +74,22 @@ public class Training3 {
 			connection = DBManager.getConnection();
 			
 			//最大件数を出したいSQL(INSERTの条件に使用)
-			String countMax = "SELECT COUNT(CAST (omikuji_code AS Integer)) as Omikuji_code FROM Omikuji;";
+			String countOmikuji = "SELECT COUNT(omikuji_code) AS countOmikuji FROM Omikuji;";
 
 			//ステートメント（SQL文を受け取って実行）
 			Statement statement1 = connection.createStatement();
 			
 			//SQL文を実行して、その結果をresultSetに代入
-			resultSet = statement1.executeQuery(countMax);
+			resultSet = statement1.executeQuery(countOmikuji);
 
-			//おみくじコードの最大件数を取得するための宣言
-			String countOmikujiCode = "";
 
 			if (resultSet.next()) {
 				//1件取得(最大件数)
-				countOmikujiCode = resultSet.getString("omikuji_code");
+				countOmikujiCode = resultSet.getInt("countOmikuji");
 			}
 
-			//おみくじコードの最大件数(50)を出す(String型をint型に変換)
-			int count = Integer.parseInt(countOmikujiCode);
-
 			//最大件数が50未満だったら登録処理にすすむ
-			if(count < 50) {
+			if(countOmikujiCode < 50) {
 
 				//50回分する
 				for (int i = 0; i < line.size(); i++) {
@@ -114,8 +112,13 @@ public class Training3 {
 					preparedStatement.setString(5, data[4]);
 
 					//SQL文を実行(登録の際はUpdate)
-					preparedStatement.executeUpdate();
-					
+					int num = preparedStatement.executeUpdate();
+
+					//登録された件数が1件でなければ出力
+					if(num != 1) {
+						System.out.println("登録されていません");
+					}
+
 					//close処理
 					preparedStatement.close();
 				}
@@ -140,12 +143,22 @@ public class Training3 {
 					//readLine()メソッドを使って入力した1行データを読み込む
 					inputStr = reader.readLine();
 					
+					if(!inputStr.matches("^[0-9]{4}[0-9]{2}[0-9]{2}$")) {
+						System.out.println("形式がyyyyMMddになっていないです");
+						continue;
+					}
 					//入力したデータをDate型に変換
 					inputDate = simpleDateFormat.parse(inputStr);
+					
+					//入力した日付をフォーマット
+					inputStr = simpleDateFormat.format(inputDate);
 	
-				} catch (ParseException | NumberFormatException pn) {
+				} catch (ParseException pe) {
 					//入力した日付が存在しないか、フォーマットが違う場合
 					System.out.println("存在しない日付です");
+					continue;
+				}catch(NumberFormatException ne) {
+					System.out.println("数値以外が入力されています");
 					continue;
 				}
 				//正しい値が入力されたら抜ける
@@ -168,34 +181,13 @@ public class Training3 {
 			//ステートメント作成（オブジェクト生成）
 			PreparedStatement preparedStatement2 = connection.prepareStatement(result);
 
-			//おみくじコードの最大値を出すためのSQL文(ランダムに使用)
-			//文字列型のomikuji_codeをInteger型にキャスト
-			String maxCode = "SELECT MAX(CAST (omikuji_code AS Integer)) as Omikuji_code FROM Omikuji";
-
-			//ステートメント（SQL文を受け取って実行）
-			Statement statement2 = connection.createStatement();
-
-			//SQL文を実行して、その結果をresultSetに代入
-			ResultSet resultSet2 = statement2.executeQuery(maxCode);
-
-			//おみくじコードの最大値を取得するための宣言
-			String maxOmikujiCode = "";
-
-			if (resultSet2.next()) {
-				//1件取得(最大値)
-				maxOmikujiCode = resultSet2.getString("omikuji_code");
-			}
-
-			//おみくじコードの最大値(50)を出す(String型をint型に変換)
-			int max = Integer.parseInt(maxOmikujiCode);
-
 			/** ランダムの最小値を定義しています*/
-			final int MIN = 1;
+			final int one = 1;
 
 			//ランダムにしたおみくじの値をバインド(116行目のSQL文)
 			//omikuji_codeの?の部分に、同じ日に同じ運勢が返ってくる + 50個(omikuji_codeの最大値)分ランダムにしている
 			//rand.nextIntをString型に変換
-			preparedStatement2.setString(1, String.valueOf(rand.nextInt(MIN, max + MIN)));
+			preparedStatement2.setString(1, String.valueOf(rand.nextInt(countOmikujiCode) + one));
 
 			//SQLを実行(preparedStatement2のオブジェクトが代入される)
 			ResultSet resultSet3 = preparedStatement2.executeQuery();
@@ -220,6 +212,8 @@ public class Training3 {
 				omikuji.setAkinai(akinai);
 				omikuji.setGakumon(gakumon);
 				}
+				//close処理
+				preparedStatement2.close();
 				//おみくじの内容をコンソールに表示
 				System.out.println(omikuji.disp());
 
@@ -242,30 +236,29 @@ public class Training3 {
 
 				//SQL文を実行(登録の際はUpdate)
 				preparedStatement3.executeUpdate();
+				
+				//close処理
+				preparedStatement3.close();
 
-		} catch (IOException e) {
+		} catch (IOException ie) {
 			//BufferedReaderの処理に失敗した場合
 			System.out.println("BufferedReader関係でエラーです");
-			e.printStackTrace();
+			ie.printStackTrace();
 
-		} catch (SQLException s) {
+		} catch (SQLException se) {
 			//DB接続関連でのエラー
 			System.out.println("DB関係でエラーです");
-			s.printStackTrace();
+			se.printStackTrace();
 
-		} catch (ClassNotFoundException c) {
+		} catch (ClassNotFoundException ce) {
 			//クラスが見つからなかった時のエラー
 			System.out.println("クラスが見つかりません");
-			c.printStackTrace();
+			ce.printStackTrace();
 
 		} finally {
 			//クローズ処理
 			//DBとの接続を切断
 			DBManager.close(connection);
-			//PreparedStatemrntとの接続を切断
-			DBManager.close(preparedStatement);
-			//resultSetとの接続を遮断
-			DBManager.close(resultSet);
 		}
 	}
 
