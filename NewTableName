@@ -1,9 +1,0 @@
-CREATE TABLE result( --結果テーブル
-	fortune_date date not null, --占い日付
-	birthday date not null, --誕生日
-	omikuji_code varchar(55) not null REFERENCES omikuji(omikuji_code) , --おみくじコード
-	changer varchar(50) not null, --更新者
-	update_date date not null, --更新日
-	author varchar(20) not null, --作成者
-	created_date date not null, --作成日
-);
