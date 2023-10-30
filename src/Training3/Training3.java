@@ -73,7 +73,8 @@ public class Training3 {
 			//DBに接続
 			connection = DBManager.getConnection();
 			
-			//最大件数を出したいSQL(INSERTの条件に使用)
+			//最大件数を出したいSQL(INSERTの条件、ランダムの最大件数に使用)
+			//AS countOmikuji 別名をつけている
 			String countOmikuji = "SELECT COUNT(omikuji_code) AS countOmikuji FROM Omikuji;";
 
 			//ステートメント（SQL文を受け取って実行）
